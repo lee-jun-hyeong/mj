@@ -6,31 +6,63 @@
 
 - TypeScript
 - Vite
-- Firebase App Hosting
+- Firebase Hosting
+- Firebase Firestore
+- Firebase Storage
+- Firebase Authentication
+- Firebase Functions
 
 ## 개발 환경 설정
 
 1. 의존성 설치
 ```bash
 npm install
+cd functions && npm install && cd ..
 ```
 
-2. 개발 서버 실행
+2. Firebase 환경 변수 설정
+프로젝트 루트에 `.env` 파일을 생성하고 Firebase 콘솔에서 가져온 설정 값을 입력하세요:
+```env
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=michael-jesus.firebaseapp.com
+VITE_FIREBASE_STORAGE_BUCKET=michael-jesus.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+```
+
+3. 개발 서버 실행
 ```bash
 npm run dev
 ```
 
-3. 빌드
+4. 빌드
 ```bash
 npm run build
 ```
 
-4. Firebase 배포
+5. Firebase 배포
 ```bash
-npm run deploy
+# 전체 배포 (Hosting + Functions)
+npm run build:deploy
+
+# Hosting만 배포
+npm run deploy:hosting
+
+# Functions만 배포
+npm run deploy:functions
 ```
+
+## Firebase 서비스
+
+- **Hosting**: 웹앱 호스팅
+- **Firestore**: 데이터베이스
+- **Storage**: 파일 저장소 (악보 이미지 등)
+- **Authentication**: 사용자 인증
+- **Functions**: 서버리스 함수
 
 ## Firebase 설정
 
-`.firebaserc` 파일에서 프로젝트 ID를 설정하세요.
+프로젝트 ID는 `michael-jesus`로 설정되어 있습니다. (`.firebaserc` 파일)
+
+Firebase 콘솔: https://console.firebase.google.com/u/0/project/michael-jesus
 

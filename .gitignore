@@ -39,4 +39,10 @@ lerna-debug.log*
 # Firebase
 .firebase/
 .firebaserc.local
+firebase-debug.log
+firebase-debug.*.log
+
+# Functions
+functions/lib/
+functions/node_modules/
 
