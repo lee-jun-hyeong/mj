@@ -1,8 +1,9 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions';
 
 // Example function
-export const helloWorld = functions.https.onRequest((request, response) => {
-  functions.logger.info('Hello logs!', { structuredData: true });
+export const helloWorld = onRequest((request, response) => {
+  logger.info('Hello logs!', { structuredData: true });
   response.json({ message: 'Hello from Firebase!' });
 });
 
