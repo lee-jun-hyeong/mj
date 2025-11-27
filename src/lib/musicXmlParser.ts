@@ -17,24 +17,52 @@ export interface ParsedMeasure {
 
 export function parseMusicXML(musicXml: string): ParsedMeasure[] {
   try {
+    console.log('MusicXML 파싱 시작, 길이:', musicXml.length);
+
     const result = xml2js(musicXml, { compact: true, ignoreComment: true }) as ElementCompact;
+    console.log('XML 파싱 결과:', result);
 
     // MusicXML 구조 파싱
     const scorePartwise = (result as any)['score-partwise'] || (result as any)['score-timewise'];
     if (!scorePartwise) {
+      console.error('score-partwise 또는 score-timewise를 찾을 수 없습니다. 결과:', result);
       throw new Error('유효하지 않은 MusicXML 형식입니다.');
     }
 
-    const part = scorePartwise.part;
+    console.log('scorePartwise:', scorePartwise);
+
+    // part가 배열일 수도 있고 단일 객체일 수도 있음
+    let part = scorePartwise.part;
     if (!part) {
+      // part-list에서 part 찾기 시도
+      if (scorePartwise['part-list'] && scorePartwise['part-list']['score-part']) {
+        console.log('part-list에서 part 찾기 시도');
+      }
+      console.error('part를 찾을 수 없습니다. scorePartwise:', scorePartwise);
       return [];
     }
 
-    const measures = Array.isArray(part.measure) ? part.measure : [part.measure];
+    // part가 배열인 경우 첫 번째 part 사용
+    if (Array.isArray(part)) {
+      part = part[0];
+    }
+
+    console.log('part:', part);
+
+    const measures = part.measure;
+    if (!measures) {
+      console.error('measure를 찾을 수 없습니다. part:', part);
+      return [];
+    }
+
+    const measureArray = Array.isArray(measures) ? measures : [measures];
+    console.log('measures 개수:', measureArray.length);
+
     const parsedMeasures: ParsedMeasure[] = [];
 
-    measures.forEach((measure: any) => {
+    measureArray.forEach((measure: any, index: number) => {
       const parsedMeasure: ParsedMeasure = { notes: [] };
+      console.log(`Measure ${index} 파싱:`, measure);
 
       // Attributes 파싱
       if (measure.attributes) {
@@ -65,6 +93,7 @@ export function parseMusicXML(musicXml: string): ParsedMeasure[] {
       const notes = measure.note;
       if (notes) {
         const noteArray = Array.isArray(notes) ? notes : [notes];
+        console.log(`Measure ${index}의 notes 개수:`, noteArray.length);
 
         noteArray.forEach((note: any) => {
           if (note.rest) {
@@ -97,11 +126,14 @@ export function parseMusicXML(musicXml: string): ParsedMeasure[] {
       }
 
       parsedMeasures.push(parsedMeasure);
+      console.log(`Measure ${index} 파싱 완료, notes 개수:`, parsedMeasure.notes.length);
     });
 
+    console.log('전체 파싱 완료, measures 개수:', parsedMeasures.length);
     return parsedMeasures;
   } catch (error) {
     console.error('MusicXML 파싱 오류:', error);
+    console.error('오류 상세:', error instanceof Error ? error.stack : String(error));
     return [];
   }
 }

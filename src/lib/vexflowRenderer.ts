@@ -35,23 +35,61 @@ export function renderScore(
 
     // 첫 번째 measure에만 clef, key, time signature 추가
     if (measureIndex === 0) {
-      stave.addClef(clef.toLowerCase());
+      // VexFlow 5.0 addClef는 문자열을 받음
+      try {
+        const clefType = clef.toLowerCase() === 'g' ? 'treble' :
+                        clef.toLowerCase() === 'f' ? 'bass' :
+                        clef.toLowerCase() === 'c' ? 'alto' : 'treble';
+        stave.addClef(clefType);
+      } catch (e) {
+        // addClef 실패 시 기본값 사용
+        console.warn('Clef 추가 실패, 기본값 사용:', e);
+        try {
+          stave.addClef('treble');
+        } catch (e2) {
+          console.warn('기본 Clef 추가도 실패:', e2);
+        }
+      }
+
       if (key !== 0) {
         // Key signature는 간단히 처리 (실제로는 더 복잡)
-        stave.addKeySignature(key > 0 ? 'F#' : 'Bb');
+        try {
+          stave.addKeySignature(key > 0 ? 'F#' : 'Bb');
+        } catch (e) {
+          console.warn('Key signature 추가 실패:', e);
+        }
       }
-      stave.addTimeSignature(`${timeSignature.beats}/${timeSignature.beatType}`);
+
+      try {
+        stave.addTimeSignature(`${timeSignature.beats}/${timeSignature.beatType}`);
+      } catch (e) {
+        console.warn('Time signature 추가 실패:', e);
+      }
     }
 
     stave.setContext(ctx).draw();
 
     // Notes 생성
+    // VexFlow 5.0에서는 StaveNote에 clef 속성을 올바른 형식으로 설정해야 함
+    const clefType = clef.toLowerCase() === 'g' ? 'treble' :
+                    clef.toLowerCase() === 'f' ? 'bass' :
+                    clef.toLowerCase() === 'c' ? 'alto' : 'treble';
+
     const staveNotes = measure.notes.map((note: ParsedNote) => {
-      return new StaveNote({
-        clef: clef.toLowerCase(),
-        keys: [note.pitch],
-        duration: note.duration,
-      });
+      try {
+        return new StaveNote({
+          keys: [note.pitch],
+          duration: note.duration,
+          clef: clefType,
+        });
+      } catch (error) {
+        console.error('StaveNote 생성 오류:', error, { pitch: note.pitch, duration: note.duration, clef: clefType });
+        // clef 없이 재시도
+        return new StaveNote({
+          keys: [note.pitch],
+          duration: note.duration,
+        });
+      }
     });
 
     // Voice 생성 및 포맷팅

@@ -1,6 +1,5 @@
 import { logger } from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
-import { defineString } from 'firebase-functions/params';
 import * as https from 'https';
 import * as http from 'http';
 import * as fs from 'fs';
@@ -8,15 +7,14 @@ import * as path from 'path';
 import * as os from 'os';
 
 // Cloud Run OMR 서비스 URL (환경 변수에서 가져오기)
-// 배포 시: firebase functions:config:set omr.service_url="..." 또는
-// Firebase Console에서 환경 변수 설정
-const omrServiceUrl = defineString('OMR_SERVICE_URL', {
-  default: '',
-  description: 'Cloud Run OMR 서비스 URL',
-});
-
+// Google Cloud Console에서 환경 변수 설정:
+// 1. https://console.cloud.google.com/functions 접속
+// 2. processOMR 함수 선택
+// 3. "편집" 클릭 > "환경 변수, 네트워킹, 시간 제한 등" 클릭
+// 4. "환경 변수" 섹션에서 OMR_SERVICE_URL 추가
 const getOMRServiceUrl = (): string => {
-  return omrServiceUrl.value();
+  // process.env에서 직접 읽기 (Google Cloud Console에서 설정한 값)
+  return process.env.OMR_SERVICE_URL || '';
 };
 
 // OMR 처리 함수

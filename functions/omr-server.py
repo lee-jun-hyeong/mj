@@ -44,11 +44,103 @@ class OMRHandler(BaseHTTPRequestHandler):
             self.send_error(500, str(e))
 
     def process_omr(self, image_url):
-        """OMR 처리 (플레이스홀더)"""
-        # TODO: 실제 Audiveris 실행
-        # 예: java -jar audiveris.jar -batch -export -output /tmp /tmp/image.jpg
-
-        # 현재는 기본 MusicXML 반환
+        """OMR 처리 (Audiveris 사용)"""
+        import subprocess
+        import urllib.request
+        import shutil
+        
+        temp_image = None
+        output_dir = None
+        
+        try:
+            # 이미지 다운로드
+            print(f'이미지 다운로드 시작: {image_url}')
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
+            urllib.request.urlretrieve(image_url, temp_image.name)
+            print(f'이미지 다운로드 완료: {temp_image.name}')
+            
+            # 출력 디렉토리 생성
+            output_dir = tempfile.mkdtemp()
+            print(f'출력 디렉토리 생성: {output_dir}')
+            
+            # Audiveris 실행
+            audiveris_jar = '/app/audiveris.jar'
+            if not os.path.exists(audiveris_jar):
+                print(f'Audiveris JAR 파일을 찾을 수 없습니다: {audiveris_jar}')
+                return self.get_fallback_musicxml()
+            
+            print('Audiveris 실행 시작...')
+            cmd = [
+                'java', '-jar', audiveris_jar,
+                '-batch',
+                '-export',
+                '-output', output_dir,
+                temp_image.name
+            ]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5분 타임아웃
+                cwd='/app'
+            )
+            
+            print(f'Audiveris 실행 완료. 반환 코드: {result.returncode}')
+            if result.stdout:
+                print(f'표준 출력: {result.stdout[:500]}')
+            if result.stderr:
+                print(f'오류 출력: {result.stderr[:500]}')
+            
+            if result.returncode != 0:
+                print(f'Audiveris 실행 실패: {result.stderr}')
+                return self.get_fallback_musicxml()
+            
+            # 생성된 MusicXML 파일 찾기
+            musicxml_files = []
+            for root, dirs, files in os.walk(output_dir):
+                for file in files:
+                    if file.endswith('.musicxml') or file.endswith('.xml'):
+                        musicxml_files.append(os.path.join(root, file))
+            
+            print(f'찾은 MusicXML 파일: {musicxml_files}')
+            
+            if not musicxml_files:
+                print('MusicXML 파일을 찾을 수 없습니다')
+                return self.get_fallback_musicxml()
+            
+            # 첫 번째 MusicXML 파일 읽기
+            musicxml_path = musicxml_files[0]
+            print(f'MusicXML 파일 읽기: {musicxml_path}')
+            with open(musicxml_path, 'r', encoding='utf-8') as f:
+                music_xml = f.read()
+            
+            print(f'MusicXML 읽기 완료, 길이: {len(music_xml)}')
+            return music_xml
+            
+        except subprocess.TimeoutExpired:
+            print('Audiveris 실행 타임아웃')
+            return self.get_fallback_musicxml()
+        except Exception as e:
+            print(f'OMR 처리 오류: {e}')
+            import traceback
+            traceback.print_exc()
+            return self.get_fallback_musicxml()
+        finally:
+            # 임시 파일 정리
+            if temp_image and os.path.exists(temp_image.name):
+                try:
+                    os.unlink(temp_image.name)
+                except:
+                    pass
+            if output_dir and os.path.exists(output_dir):
+                try:
+                    shutil.rmtree(output_dir)
+                except:
+                    pass
+    
+    def get_fallback_musicxml(self):
+        """폴백 MusicXML 반환"""
         return '''<?xml version="1.0" encoding="UTF-8"?>
 <score-partwise version="3.1">
   <part-list>

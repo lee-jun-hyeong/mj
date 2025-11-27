@@ -26,6 +26,7 @@ function ScorePlayer({ scoreId }: ScorePlayerProps) {
       setIsPlaying(false);
     } else {
       try {
+        // AudioContext는 musicPlayer.playNotes에서 시작됨
         const notes = player.parseMusicXMLToNotes(score.musicXml);
         await player.playNotes(notes);
         setIsPlaying(true);

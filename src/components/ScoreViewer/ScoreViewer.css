@@ -39,3 +39,35 @@
   color: #f44336;
 }
 
+.omr-reprocess {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.omr-reprocess p {
+  margin: 0 0 0.5rem 0;
+  color: #856404;
+}
+
+.btn-reprocess {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-reprocess:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-reprocess:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
