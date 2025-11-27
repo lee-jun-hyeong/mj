@@ -68,12 +68,14 @@ Firebase 콘솔: https://console.firebase.google.com/u/0/project/michael-jesus
 
 ## OMR 서비스 설정
 
-Audiveris OMR 통합을 위한 Cloud Run 서비스 배포가 필요합니다. 자세한 내용은 `SETUP-OMR.md`를 참고하세요.
+Audiveris OMR 통합을 위한 Cloud Run 서비스 배포가 필요합니다.
 
-### 빠른 시작
+### 빠른 시작 (Windows)
 
-1. gcloud 인증: `gcloud auth login`
-2. Cloud Run 배포: `./cloud-run-deploy.sh` (또는 `SETUP-OMR.md` 참고)
+1. gcloud 인증: `gcloud auth login` (브라우저에서 인증)
+2. Cloud Run 배포: `.\deploy-omr.ps1` 실행
 3. Firebase Console에서 Functions 환경 변수 `OMR_SERVICE_URL` 설정
 4. Functions 재배포: `npm run deploy:functions`
+
+자세한 내용은 `QUICK-START.md` 또는 `SETUP-OMR.md`를 참고하세요.
 
