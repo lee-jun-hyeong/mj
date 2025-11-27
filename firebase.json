@@ -69,9 +69,11 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "storage": {
-    "rules": "storage.rules",
-    "bucket": "michael-jesus.firebasestorage.app"
-  }
+  "storage": [
+    {
+      "bucket": "michael-jesus.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ]
 }
 
