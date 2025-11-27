@@ -1,5 +1,6 @@
 import { logger } from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
+import { defineString } from 'firebase-functions/params';
 import * as https from 'https';
 import * as http from 'http';
 import * as fs from 'fs';
@@ -7,11 +8,15 @@ import * as path from 'path';
 import * as os from 'os';
 
 // Cloud Run OMR 서비스 URL (환경 변수에서 가져오기)
-// Firebase Console에서 환경 변수로 설정하거나
-// firebase functions:config:set omr.service_url="..." 로 설정
+// 배포 시: firebase functions:config:set omr.service_url="..." 또는
+// Firebase Console에서 환경 변수 설정
+const omrServiceUrl = defineString('OMR_SERVICE_URL', {
+  default: '',
+  description: 'Cloud Run OMR 서비스 URL',
+});
+
 const getOMRServiceUrl = (): string => {
-  // Functions v2에서는 process.env를 직접 사용
-  return process.env.OMR_SERVICE_URL || '';
+  return omrServiceUrl.value();
 };
 
 // OMR 처리 함수
