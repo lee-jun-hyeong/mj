@@ -1,0 +1,36 @@
+# Set default behavior to automatically normalize line endings.
+* text=auto eol=lf
+
+# Force UTF-8 encoding for all text files
+* text charset=utf-8
+
+# Source files
+*.js text charset=utf-8 eol=lf
+*.jsx text charset=utf-8 eol=lf
+*.ts text charset=utf-8 eol=lf
+*.tsx text charset=utf-8 eol=lf
+*.json text charset=utf-8 eol=lf
+*.html text charset=utf-8 eol=lf
+*.css text charset=utf-8 eol=lf
+*.scss text charset=utf-8 eol=lf
+*.md text charset=utf-8 eol=lf
+*.yml text charset=utf-8 eol=lf
+*.yaml text charset=utf-8 eol=lf
+*.txt text charset=utf-8 eol=lf
+
+# Python files
+*.py text charset=utf-8 eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
