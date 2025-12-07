@@ -23,15 +23,3 @@ export interface NoteData {
   rest?: boolean;
 }
 
-export interface ScoreDocument {
-  id: string;
-  imageUrl: string;
-  status: 'uploaded' | 'processing' | 'completed' | 'error';
-  scoreData?: ScoreData;
-  originalKey?: string;
-  transposedKey?: string;
-  errorMessage?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-

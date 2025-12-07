@@ -46,7 +46,13 @@ firebase-debug.*.log
 functions/lib/
 functions/node_modules/
 
-# Cloud Run
-*.sh
-!cloud-run-deploy.sh
-
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv/

@@ -1,14 +1,11 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // 사용자는 자신의 파일만 업로드/읽기 가능
-    match /scores/{userId}/{scoreId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // 기타 파일은 인증된 사용자만 접근
+    // 개발 단계: 모든 파일 공개 읽기/쓰기 허용
+    // 프로덕션에서는 인증 필요로 변경 필요
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if true;
     }
   }
 }
+

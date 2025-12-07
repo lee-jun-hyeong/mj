@@ -6,30 +6,25 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "build:deploy": "npm run build && firebase deploy",
     "deploy": "firebase deploy",
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",
     "serve": "firebase emulators:start"
   },
   "dependencies": {
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
     "firebase": "^10.7.1",
-    "musicxml-interfaces": "^0.0.21",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.9.6",
-    "tone": "^15.1.22",
-    "vexflow": "^5.0.0",
-    "xml-js": "^1.6.11"
+    "vexflow": "^4.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
-    "@types/xml-js": "^0.9.0",
-    "@vitejs/plugin-react": "^5.1.1",
-    "firebase-tools": "^13.0.0",
     "typescript": "^5.3.3",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "firebase-tools": "^13.0.0"
   }
 }
+
