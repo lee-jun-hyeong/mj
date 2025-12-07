@@ -110,9 +110,9 @@ export function subscribeToScore(
 export async function getAllScores(maxResults: number = 50): Promise<ScoreDocument[]> {
   const scoresRef = collection(db, SCORES_COLLECTION);
   const q = query(scoresRef, orderBy('createdAt', 'desc'), limit(maxResults));
-  
+
   const snapshot = await getDocs(q);
-  
+
   const scores: ScoreDocument[] = [];
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
@@ -123,7 +123,7 @@ export async function getAllScores(maxResults: number = 50): Promise<ScoreDocume
       updatedAt: data.updatedAt?.toDate() || new Date()
     } as ScoreDocument);
   });
-  
+
   return scores;
 }
 

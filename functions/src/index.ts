@@ -1,6 +1,10 @@
 import * as functions from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
 import { analyzeScoreImage } from './geminiScoreAnalyzer';
+import { correctWithAI } from './aiCorrector';
+import { parseMusicXml } from './musicXmlParser';
+import { processWithAudiveris, downloadImageToTemp } from './audiverisProcessor';
+import { processWithAudiverisCloudRun } from './audiverisCloudRun';
 import { updateScoreStatus } from './firestoreUtils';
 import { defineSecret } from 'firebase-functions/params';
 
@@ -15,6 +19,9 @@ export const processScoreImage = functions.storage
     {
       bucket: 'michael-jesus.firebasestorage.app',
       secrets: [geminiApiKey],
+      memory: '2GiB',
+      timeoutSeconds: 540,
+      cpu: 2,
     },
     async (event) => {
       const object = event.data;
@@ -101,8 +108,48 @@ export const processScoreImage = functions.storage
       // 상태를 processing으로 변경
       await updateScoreStatus(db, scoreId, 'processing');
 
-      // Gemini API로 악보 분석 (Firestore에 저장된 imageUrl 사용)
-      const scoreData = await analyzeScoreImage(imageUrl, geminiApiKey.value());
+      let scoreData;
+
+      // Audiveris 사용 여부 확인 (환경 변수로 제어, 기본값: true)
+      const useAudiveris = process.env.USE_AUDIVERIS !== 'false';
+
+      if (useAudiveris) {
+        try {
+          // Audiveris + AI 하이브리드 방식
+          console.log('Using Audiveris + AI hybrid approach');
+
+          // Cloud Run URL 확인 (환경 변수 또는 기본값)
+          const cloudRunUrl = process.env.AUDIVERIS_CLOUD_RUN_URL || 'https://audiveris-service-51418627624.us-central1.run.app';
+
+          // Cloud Run 서비스를 통해 Audiveris 실행
+          console.log(`Using Cloud Run service: ${cloudRunUrl}`);
+          const musicXmlContent = await processWithAudiverisCloudRun(imageUrl, cloudRunUrl);
+          console.log('Audiveris Cloud Run processing completed, MusicXML length:', musicXmlContent.length);
+
+          // MusicXML 파싱
+          const audiverisResult = await parseMusicXml(musicXmlContent);
+          console.log('MusicXML parsed successfully:', {
+            title: audiverisResult.title,
+            timeSignature: audiverisResult.timeSignature,
+            keySignature: audiverisResult.keySignature,
+            stavesCount: audiverisResult.staves.length
+          });
+
+          // AI로 보정
+          console.log('Starting AI correction...');
+          scoreData = await correctWithAI(audiverisResult, imageUrl, geminiApiKey.value());
+          console.log('AI correction completed');
+        } catch (audiverisError) {
+          console.error('Audiveris processing failed, falling back to AI-only:', audiverisError);
+          console.error('Error details:', audiverisError instanceof Error ? audiverisError.message : String(audiverisError));
+          // Audiveris 실패 시 AI만 사용
+          scoreData = await analyzeScoreImage(imageUrl, geminiApiKey.value());
+        }
+      } else {
+        // AI만 사용 (기존 방식)
+        console.log('Using AI-only approach (USE_AUDIVERIS=false)');
+        scoreData = await analyzeScoreImage(imageUrl, geminiApiKey.value());
+      }
 
       // 상태를 completed로 변경하고 결과 저장
       await updateScoreStatus(db, scoreId, 'completed', scoreData);

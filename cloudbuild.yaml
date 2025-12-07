@@ -1,0 +1,25 @@
+steps:
+  # Docker 이미지 빌드
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/audiveris-functions:latest'
+      - '-f'
+      - 'functions/Dockerfile'
+      - 'functions'
+    dir: '.'
+
+  # 이미지 푸시
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/audiveris-functions:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/audiveris-functions:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+

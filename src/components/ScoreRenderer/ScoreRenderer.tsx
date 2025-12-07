@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { subscribeToScore } from '../../lib/firestore';
-import { ScoreDocument, ScoreData } from '../../types/score';
+import { ScoreDocument } from '../../types/score';
 import { renderScore } from '../../lib/vexflowRenderer';
 import './ScoreRenderer.css';
 

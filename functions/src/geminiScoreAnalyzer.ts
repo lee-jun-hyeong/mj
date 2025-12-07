@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ScoreData } from './types/score';
+import { ScoreData, NoteData, MeasureData } from './types/score';
 import * as https from 'https';
 
 /**
@@ -31,9 +31,9 @@ export async function analyzeScoreImage(imageUrl: string, apiKey?: string): Prom
   }
 
   const genAI = new GoogleGenerativeAI(key);
-  // 사용 가능한 모델: gemini-2.5-flash-lite (이미지 지원)
+  // 사용 가능한 모델: gemini-2.5-pro (이미지 지원, 더 정확한 분석)
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash-lite'
+    model: 'gemini-2.5-pro'
   });
 
   // 이미지 다운로드
@@ -55,15 +55,29 @@ export async function analyzeScoreImage(imageUrl: string, apiKey?: string): Prom
       "clef": "treble",
       "measures": [
         {
+          "startX": 0.0,
           "notes": [
             {
               "pitch": "C4",
               "duration": "quarter",
-              "rest": false
+              "rest": false,
+              "beat": 0
+            },
+            {
+              "pitch": "E4",
+              "duration": "quarter",
+              "rest": false,
+              "beat": 1
             }
           ],
-          "chords": ["C"],
-          "lyrics": ["주께", "와"]
+          "chords": ["C", "Am"],
+          "chordPositions": [0, 2],
+          "lyrics": ["주", "께", "와"],
+          "lyricPositions": [0, 1, 2]
+        },
+        {
+          "startX": 0.25,
+          "notes": [...]
         }
       ]
     }
@@ -71,11 +85,14 @@ export async function analyzeScoreImage(imageUrl: string, apiKey?: string): Prom
 }
 
 중요 사항:
-1. **박자표 (Time Signature) 분석**:
-   - 보표 시작 부분의 박자표를 정확히 확인하세요 (예: 3/4, 4/4, 2/4 등)
+1. **박자표 (Time Signature) 분석** (매우 중요, 반드시 정확히 확인):
+   - 보표 시작 부분의 박자표를 **매우 정확히** 확인하세요 (예: 3/4, 4/4, 2/4, 6/8 등)
+   - **박자표는 보표의 시작 부분, 조표 바로 다음에 있습니다**
    - 분자(위 숫자)는 한 마디의 박 수, 분모(아래 숫자)는 박의 단위입니다
+   - **3/4와 4/4를 혼동하지 마세요**: 3/4는 위에 3, 아래에 4가 있고, 4/4는 위에 4, 아래에 4가 있습니다
    - 모든 보표에서 동일한 박자표를 사용하는지 확인하세요
    - 예: 3/4 = 한 마디에 4분음표 3개, 4/4 = 한 마디에 4분음표 4개
+   - **박자표를 확인할 때 숫자를 정확히 읽으세요. 3과 4를 혼동하지 마세요**
 
 2. **조표 (Key Signature) 분석**:
    - 보표 시작 부분의 샵(#) 또는 플랫(b) 개수를 정확히 세세요
@@ -84,27 +101,52 @@ export async function analyzeScoreImage(imageUrl: string, apiKey?: string): Prom
    - 플랫 1개 = F 또는 Dm, 플랫 2개 = Bb 또는 Gm, 플랫 3개 = Eb 또는 Cm
    - 코드 진행을 보고 major인지 minor인지 판단하세요 (첫 코드가 C면 C major, Am이면 A minor)
 
-3. **음높이 (Pitch) 분석**:
-   - pitch는 과학적 음높이 표기법을 사용하세요 (C4, D#4, E4, F4, G4, A4, B4, C5 등)
+3. **음높이 (Pitch) 분석** (매우 중요):
+   - pitch는 반드시 과학적 음높이 표기법만 사용하세요 (C4, D#4, E4, F4, G4, A4, B4, C5 등)
    - C4 = 중앙 C (Middle C)
    - 샵(#)은 "#"로, 플랫(b)은 "b"로 표기
+   - **절대 코드 기호를 pitch에 넣지 마세요**: "F#m7", "Am", "C" 같은 코드 기호는 pitch가 아닙니다
+   - 코드 기호는 chords 배열에만 넣고, pitch는 실제 음높이만 사용하세요
+   - 예: 코드가 "F#m7"이고 실제 음이 F#4라면 → pitch: "F#4", chords: ["F#m7"]
 
-4. **음표 길이 (Duration) 분석**:
+4. **음표 길이 (Duration) 및 위치 (Beat) 분석** (매우 중요):
    - duration은 다음 중 하나를 사용: "whole", "half", "quarter", "eighth", "sixteenth"
    - 각 마디의 총 duration이 박자표와 일치하는지 확인하세요
+   - **beat 필드**: 각 음표가 마디 내에서 어느 위치에 있는지 표시 (0부터 시작)
+   - beat는 quarter note를 기준으로 계산: quarter = 1 beat, half = 2 beats, whole = 4 beats, eighth = 0.5 beats
+   - 예: 4/4 박자에서 첫 번째 quarter note는 beat: 0, 두 번째는 beat: 1, 세 번째는 beat: 2, 네 번째는 beat: 3
+   - 예: 4/4 박자에서 첫 번째 eighth note는 beat: 0, 두 번째는 beat: 0.5, 세 번째는 beat: 1, 네 번째는 beat: 1.5
+   - **반드시 각 음표의 beat 위치를 정확히 계산하여 제공하세요**
 
-5. **코드 및 가사 매핑**:
+5. **코드 및 가사 매핑** (매우 중요):
    - 각 마디의 음표, 코드, 가사를 정확히 매핑하세요
    - 한국어 가사가 있으면 반드시 포함하세요
    - 코드 기호가 있으면 chords 배열에 포함하세요 (예: "C", "Am7", "Dm7", "G", "G/F")
+   - **chordPositions 배열**: 각 코드가 어떤 beat에 위치하는지 명시 (chords 배열과 인덱스 매칭)
+   - **lyricPositions 배열**: 각 가사가 어떤 beat에 위치하는지 명시 (lyrics 배열과 인덱스 매칭)
+   - 예: chords: ["C", "Am"], chordPositions: [0, 2] → C는 beat 0에, Am은 beat 2에
+   - 예: lyrics: ["주", "께"], lyricPositions: [0, 1] → "주"는 beat 0에, "께"는 beat 1에
+   - 코드나 가사가 없는 beat는 배열에서 생략하세요
 
-6. **보표 구조**:
+6. **보표 구조** (매우 중요):
+   - **모든 보표를 빠짐없이 포함하세요**: 이미지에 보이는 모든 보표를 staves 배열에 추가하세요
+   - 보표 수를 정확히 세세요: 각 보표는 보표선(5개의 가로선)으로 구분됩니다
    - 여러 보표가 있으면 각각 staves 배열에 추가하세요
    - 쉼표는 rest: true로 표시하세요
+   - **보표를 건너뛰지 마세요**: 모든 보표를 순서대로 포함하세요
 
-7. **검증**:
-   - 각 마디의 음표 duration 합이 박자표와 일치하는지 확인하세요
+8. **검증** (반드시 수행, 매우 중요):
+   - **박자표를 다시 한 번 확인하세요**: 3/4인지 4/4인지 정확히 확인하세요
+   - **각 마디의 음표 duration 합이 박자표와 정확히 일치해야 합니다**
+   - 예: 3/4 박자이면 각 마디의 duration 합이 정확히 3 beats가 되어야 합니다 (quarter=1, half=2, eighth=0.5, sixteenth=0.25)
+   - 예: 4/4 박자이면 각 마디의 duration 합이 정확히 4 beats가 되어야 합니다 (quarter=1, half=2, whole=4, eighth=0.5, sixteenth=0.25)
+   - 마디의 beats가 부족하면 다음 마디의 음표가 잘못 분석된 것일 수 있습니다
+   - 마디의 beats가 초과하면 음표가 잘못 분할되었거나 중복된 것일 수 있습니다
+   - **각 마디를 분석한 후 반드시 duration 합을 계산하여 박자표와 일치하는지 확인하세요**
+   - **보표 수를 확인하세요**: 모든 보표가 staves 배열에 포함되었는지 확인하세요
    - 조표와 실제 코드 진행이 일치하는지 확인하세요
+   - 모든 pitch가 유효한 형식인지 확인하세요 (A-G + #/b + 숫자만 허용)
+   - 코드 기호가 pitch 필드에 들어가지 않았는지 확인하세요
 
 JSON만 출력하고 다른 설명은 포함하지 마세요.`;
 
